@@ -7,8 +7,6 @@ import (
 	"ContractMethodAPI/mapping"
 
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
-	"golang.org/x/exp/slices"
 )
 
 func indexPage(c *gin.Context) {
@@ -19,13 +17,6 @@ func indexPage(c *gin.Context) {
 
 // how to interact with smart contract on ethereum network using go with ethereum api
 func contractSourceCode(c *gin.Context) {
-	err := godotenv.Load() // load .env file
-	if err != nil {
-		c.JSON(400, gin.H{
-			"error": "Error loading .env file",
-		})
-		return
-	}
 	// get contract address from user
 	contract_address := c.PostForm("contract_address")
 	if contract_address == "" {
@@ -81,9 +72,9 @@ func contractSourceCode(c *gin.Context) {
 
 	// get lock duration from user
 	var input_duration int
-	lock_duration_exist_chains := mapping.GetLockDurationExist(abi_file_name)
-	lock_duration_exist_file := slices.Contains(lock_duration_exist_chains, abi_file_name)
-	if lock_duration_exist_file {
+	lock_duration_exists := mapping.GetLockDurationExist(abi_file_name, user_action)
+	// lock_duration_exist_file := slices.Contains(lock_duration_exist_chains, abi_file_name)
+	if lock_duration_exists {
 		lock_duration := c.PostForm("lock_duration")
 		if lock_duration == "" {
 			c.JSON(400, gin.H{
@@ -104,5 +95,5 @@ func contractSourceCode(c *gin.Context) {
 	}
 
 	// get encode data from abi data
-	helpers.GetEncodeData(c, contract_address, string(abi_data), action_name, input_amount, input_duration, lock_duration_exist_file)
+	helpers.GetEncodeData(c, contract_address, string(abi_data), action_name, input_amount, input_duration, lock_duration_exists)
 }

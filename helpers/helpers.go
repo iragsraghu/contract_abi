@@ -26,7 +26,7 @@ func GetActionName(abi_file_name string, user_action string) string {
 	return mapping.ABIMethodsMapping(abi_file_name, user_action)
 }
 
-func GetEncodeData(c *gin.Context, contract_address string, abi_data string, action_name string, amount int, input_duration int, lock_duration_exist_file bool) {
+func GetEncodeData(c *gin.Context, contract_address string, abi_data string, action_name string, amount int, input_duration int, lock_duration_exists bool) {
 	web3, err := web3.NewWeb3(rpcProviderURL)
 	if err != nil {
 		c.JSON(400, gin.H{
@@ -46,7 +46,7 @@ func GetEncodeData(c *gin.Context, contract_address string, abi_data string, act
 	bigIntDuration := web3.Utils.ToWei(float64(input_duration)) // convert duration to wei with 18 decimals
 
 	var encoded_data []byte
-	if lock_duration_exist_file {
+	if lock_duration_exists {
 		if input_duration == 0 {
 			c.JSON(400, gin.H{
 				"error": "Duration Should be greater than 0",

@@ -1,5 +1,7 @@
 package mapping
 
+import "golang.org/x/exp/slices"
+
 func ABIMethodsMapping(abi_file_name string, user_action string) string {
 	explorers := map[string]map[string]string{
 		// Etherscan chain
@@ -34,6 +36,13 @@ func GetChainName(contract_address string) string {
 	return abi_file_names[contract_address]
 }
 
-func GetLockDurationExist(abi_file_name string) []string {
-	return []string{"pancake"} // add abi filename if lock duration exist in that chain
+func GetLockDurationExist(abi_file_name string, action_name string) bool {
+	lock_duration_files := []string{"pancake"}
+	exists := slices.Contains(lock_duration_files, abi_file_name)
+	if exists && action_name == "stake" {
+		return true
+	} else {
+		return false
+	}
+
 }
