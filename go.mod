@@ -6,6 +6,7 @@ require (
 	github.com/chenzhijie/go-web3 v0.0.0-20220608024854-c73f1994cab6
 	github.com/gin-gonic/gin v1.8.1
 	github.com/joho/godotenv v1.4.0
+	golang.org/x/exp v0.0.0-20220608143224-64259d1afd70
 )
 
 require (
@@ -29,7 +30,6 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.21.0 // indirect
 	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97 // indirect
-	golang.org/x/exp v0.0.0-20220608143224-64259d1afd70 // indirect
 	golang.org/x/net v0.0.0-20210805182204-aaa1db679c0d // indirect
 	golang.org/x/sys v0.0.0-20220608164250-635b8c9b7f68 // indirect
 	golang.org/x/text v0.3.6 // indirect
