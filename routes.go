@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 
 	"ContractMethodAPI/helpers"
@@ -17,11 +18,11 @@ func indexPage(c *gin.Context) {
 
 // how to interact with smart contract on ethereum network using go with ethereum api
 func contractSourceCode(c *gin.Context) {
-	// get contract address from user
-	contract_address := c.PostForm("contract_address")
-	if contract_address == "" {
+	// get from address from request
+	from_address := c.PostForm("from_address")
+	if from_address == "" {
 		c.JSON(400, gin.H{
-			"error": "Contract address is required",
+			"error": "From address is required",
 		})
 		return
 	}
@@ -35,6 +36,24 @@ func contractSourceCode(c *gin.Context) {
 		return
 	}
 
+	// get chain name from user
+	chain_name := c.PostForm("chain_name")
+	if chain_name == "" {
+		c.JSON(400, gin.H{
+			"error": "Chain name is required",
+		})
+		return
+	}
+
+	// get protocol name from user
+	protocol_name := c.PostForm("protocol")
+	if protocol_name == "" {
+		c.JSON(400, gin.H{
+			"error": "Protocol name is required",
+		})
+		return
+	}
+
 	// get amount from user
 	amount := c.PostForm("amount")
 	if amount == "" {
@@ -44,56 +63,49 @@ func contractSourceCode(c *gin.Context) {
 		return
 	}
 	// get convert amount from string to int
-	input_amount := helpers.ConvertStringToInt(amount)
+	input_amount := helpers.ConvertStringToFloat(amount)
+	fmt.Println("input_amount: ", input_amount)
 	if input_amount == 0 {
 		c.JSON(400, gin.H{
 			"error": "Invalid amount",
 		})
 		return
 	}
-
-	// get chain name from contract address
-	abi_file_name := mapping.GetChainName(contract_address)
-	if abi_file_name == "" {
-		c.JSON(400, gin.H{
-			"error": "ABI file name is required",
-		})
-		return
-	}
-
 	// get action name from user action
-	action_name := helpers.GetActionName(abi_file_name, user_action)
-	if action_name == "" {
-		c.JSON(400, gin.H{
-			"error": "Action Name not valid",
-		})
-		return
-	}
+	action_name, contract_address, rpcProviderURL, chain_name := helpers.GetMappingFields(chain_name, protocol_name, user_action, "contract_address", "rpcProviderURL")
 
 	// get lock duration from user
-	var input_duration int
-	lock_duration_exists := mapping.GetLockDurationExist(abi_file_name, user_action)
+	var input_duration float64
+	lock_duration_exists := mapping.GetLockDurationExist(protocol_name, user_action)
 	// lock_duration_exist_file := slices.Contains(lock_duration_exist_chains, abi_file_name)
 	if lock_duration_exists {
-		lock_duration := c.PostForm("lock_duration")
+		lock_duration := c.PostForm("duration")
 		if lock_duration == "" {
 			c.JSON(400, gin.H{
 				"Error": "Lock duration is required",
 			})
 			return
 		}
-		input_duration = helpers.ConvertStringToInt(lock_duration)
+		input_duration = helpers.ConvertStringToFloat(lock_duration)
+		fmt.Println("input_duration", input_duration)
+	}
+
+	if contract_address == "" {
+		c.JSON(400, gin.H{
+			"error": "ABI file is not found",
+		})
+		return
 	}
 
 	// get abi data from abi file name
-	abi_data, err := ioutil.ReadFile("ABI/" + abi_file_name + ".abi")
+	abi_data, err := ioutil.ReadFile("ABI/" + contract_address + ".abi")
 	if err != nil {
 		c.JSON(400, gin.H{
-			"error": abi_file_name + "Error reading abi file",
+			"error": contract_address + " Error reading abi file",
 		})
 		return
 	}
 
 	// get encode data from abi data
-	helpers.GetEncodeData(c, contract_address, string(abi_data), action_name, input_amount, input_duration, lock_duration_exists)
+	helpers.GetEncodeData(c, contract_address, string(abi_data), action_name, input_amount, input_duration, lock_duration_exists, rpcProviderURL, from_address, chain_name)
 }
