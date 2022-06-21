@@ -7,7 +7,6 @@ import (
 	"ContractMethodAPI/mapping"
 
 	"github.com/chenzhijie/go-web3"
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/gin-gonic/gin"
 	"github.com/onrik/ethrpc"
 )
@@ -69,8 +68,7 @@ func GetEncodeData(c *gin.Context, contract_address string, abi_data string, act
 	}
 	// converting byte encoded data to hex string
 	encodedString := hex.EncodeToString(encoded_data)
-	token_address := common.HexToAddress(contract_address)
-	wallet_address := common.HexToAddress(from_address)
+
 	gas := int(2100000 * 5)
 	gasLimit, err := client.EthEstimateGas(ethrpc.T{
 		To:   contract_address,
@@ -86,9 +84,9 @@ func GetEncodeData(c *gin.Context, contract_address string, abi_data string, act
 	}
 
 	c.JSON(200, gin.H{
-		"from":  wallet_address,
+		"from":  from_address,
 		"data":  encodedString,
-		"to":    token_address,
+		"to":    contract_address,
 		"chain": chain_name,
 		"gas":   gasLimit,
 		"value": 0,

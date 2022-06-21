@@ -37,8 +37,8 @@ func contractSourceCode(c *gin.Context) {
 	}
 
 	// get chain name from user
-	chain_name := c.PostForm("chain_name")
-	if chain_name == "" {
+	chain := c.PostForm("chain")
+	if chain == "" {
 		c.JSON(400, gin.H{
 			"error": "Chain name is required",
 		})
@@ -46,10 +46,10 @@ func contractSourceCode(c *gin.Context) {
 	}
 
 	// get protocol name from user
-	protocol_name := c.PostForm("protocol")
-	if protocol_name == "" {
+	protocol := c.PostForm("protocol")
+	if protocol == "" {
 		c.JSON(400, gin.H{
-			"error": "Protocol name is required",
+			"error": "Protocol is required",
 		})
 		return
 	}
@@ -72,11 +72,11 @@ func contractSourceCode(c *gin.Context) {
 		return
 	}
 	// get action name from user action
-	action_name, contract_address, rpcProviderURL, chain_name := helpers.GetMappingFields(chain_name, protocol_name, user_action, "contract_address", "rpcProviderURL")
+	action_name, contract_address, rpcProviderURL, chain_name := helpers.GetMappingFields(chain, protocol, user_action, "contract_address", "rpcProviderURL")
 
 	// get lock duration from user
 	var input_duration float64
-	lock_duration_exists := mapping.GetLockDurationExist(protocol_name, user_action)
+	lock_duration_exists := mapping.GetLockDurationExist(protocol, user_action)
 	// lock_duration_exist_file := slices.Contains(lock_duration_exist_chains, abi_file_name)
 	if lock_duration_exists {
 		lock_duration := c.PostForm("duration")
