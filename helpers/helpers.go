@@ -28,7 +28,7 @@ func GetMappingFields(chain_name string, protocol string, action string, contrac
 	return mapping.ABIMethodsMapping(chain_name, protocol, action, contract_address, rpcProviderURL)
 }
 
-func GetEncodeData(c *gin.Context, contract_address string, abi_data string, action_name string, amount float64, input_duration float64, lock_duration_exists bool, rpcProviderURL string, from_address string, chain_name string) {
+func GetEncodeData(c *gin.Context, contract_address string, abi_data string, action_name string, amount float64, input_duration float64, lock_duration_exists bool, rpcProviderURL string, from_address string, chain_name string, protocol string) {
 	// only for gas estimation purpose
 	client := ethrpc.New(rpcProviderURL)
 	web3, err := web3.NewWeb3(rpcProviderURL)
@@ -47,32 +47,36 @@ func GetEncodeData(c *gin.Context, contract_address string, abi_data string, act
 	}
 	bigIntAmount := web3.Utils.ToWei(float64(amount))           // convert amount to wei with 18 decimals
 	bigIntDuration := web3.Utils.ToWei(float64(input_duration)) // convert duration to wei with 18 decimals
-	var encoded_data []byte
-	if lock_duration_exists {
-		// if input_duration == 0 {
-		// 	c.JSON(400, gin.H{
-		// 		"error": "Duration Should be greater than 0",
-		// 	})
-		// 	return
-		// }
-		encoded_data, err = contract.EncodeABI(action_name, bigIntAmount, bigIntDuration)
-	} else {
-		encoded_data, err = contract.EncodeABI(action_name, bigIntAmount)
-	}
+	// var encoded_data []byte
+	// if lock_duration_exists {
+	// 	// if input_duration == 0 {
+	// 	// 	c.JSON(400, gin.H{
+	// 	// 		"error": "Duration Should be greater than 0",
+	// 	// 	})
+	// 	// 	return
+	// 	// }
+	// 	encoded_data, err = contract.EncodeABI(action_name, bigIntAmount, bigIntDuration)
+	// } else {
+	// 	encoded_data, err = contract.EncodeABI(action_name, bigIntAmount)
+	// }
+	args := mapping.CheckArgs(protocol, action_name, bigIntAmount, bigIntDuration)
+
+	encoded_data, err := contract.EncodeABI(action_name, args...)
 
 	if err != nil {
 		c.JSON(400, gin.H{
 			"error": "Error encoding data for contract address " + contract_address + err.Error(),
+			"args":  args,
 		})
 		return
 	}
 	// converting byte encoded data to hex string
-	encodedString := hex.EncodeToString(encoded_data)
+	encodedString := "0x" + hex.EncodeToString(encoded_data)
 
 	gas := int(2100000 * 5)
 	gasLimit, err := client.EthEstimateGas(ethrpc.T{
 		To:   contract_address,
-		Data: "0x" + encodedString,
+		Data: encodedString,
 		From: from_address,
 		Gas:  gas,
 	})
@@ -84,9 +88,9 @@ func GetEncodeData(c *gin.Context, contract_address string, abi_data string, act
 	}
 
 	c.JSON(200, gin.H{
-		"from":  from_address,
+		"from":  from_address, // wallet address
 		"data":  encodedString,
-		"to":    contract_address,
+		"to":    contract_address, // contract address
 		"chain": chain_name,
 		"gas":   gasLimit,
 		"value": 0,

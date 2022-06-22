@@ -107,5 +107,5 @@ func contractSourceCode(c *gin.Context) {
 	}
 
 	// get encode data from abi data
-	helpers.GetEncodeData(c, contract_address, string(abi_data), action_name, input_amount, input_duration, lock_duration_exists, rpcProviderURL, from_address, chain_name)
+	helpers.GetEncodeData(c, contract_address, string(abi_data), action_name, input_amount, input_duration, lock_duration_exists, rpcProviderURL, from_address, chain_name, protocol)
 }
