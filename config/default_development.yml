@@ -1,0 +1,68 @@
+# for zeroswap protocol
+protocols:
+    protocolsData:
+      - protocolName: zeroswap
+        chainName: "ethereum"
+        contractAddress: "0xEDF822c90d62aC0557F8c4925725A2d6d6f17769"
+        rpc: "https://cloudflare-eth.com"
+        action:
+          stake: "stake"
+          unstake: "unstake"
+        Inputs:
+          amount:
+            mandatory: "true"
+
+      - protocolName: zeroswap
+        chainName: "binance"
+        contractAddress: "0x89eA093C07f4FCc03AEBe8A1D5507c15dE88531f"
+        rpc: "https://bsc-dataseed.binance.org/"
+        action:
+          stake: "stake"
+          unstake: "unstake"
+        Inputs:
+          amount:
+            mandatory: "true"
+
+      - protocolName: zeroswap
+        chainName: "polygon"
+        contractAddress: "0x89eA093C07f4FCc03AEBe8A1D5507c15dE88531f"
+        rpc: "https://polygon-rpc.com"
+        action:
+          stake: "stake"
+          unstake: "unstake"
+        Inputs:
+          amount:
+            mandatory: "true"
+
+      - protocolName: zeroswap
+        chainName: "avalanche"
+        contractAddress: "0xa4751EAa89C5D6ff61384766268cabf25aCD1011"
+        rpc: "https://rpc.ankr.com/avalanche"
+        action:
+          stake: "stake"
+          unstake: "unstake"
+        Inputs:
+          amount:
+            mandatory: "true"
+
+      - protocolName: opendao
+        chainName: "ethereum"
+        contractAddress: "0xEDd27C961CE6f79afC16Fd287d934eE31a90D7D1"
+        rpc: "https://eth-mainnet.public.blastapi.io"
+        action:
+          stake: "enter"
+          unstake: "leave"
+        Inputs:
+          amount:
+            mandatory: "true"
+
+      - protocolName: pancake
+        chainName: "binance"
+        contractAddress: "0x45c54210128a065de780C4B0Df3d16664f7f859e"
+        rpc: "https://bsc-dataseed.binance.org/"
+        action:
+          stake: "deposit"
+          unstake: "withdraw"
+        Inputs:
+          amount:
+            mandatory: "true"

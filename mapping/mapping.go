@@ -1,8 +1,6 @@
 package mapping
 
 import (
-	"math/big"
-
 	"golang.org/x/exp/slices"
 )
 
@@ -71,24 +69,4 @@ func GetLockDurationExist(protocol_name string, user_action string) bool {
 		return false
 	}
 
-}
-
-func CheckArgs(protocol string, action string, input_amount *big.Int, input_duration *big.Int) []interface{} {
-	var args []interface{}
-	if protocol == "opendao" {
-		args = append(args, input_amount)
-	} else if protocol == "zeroswap" {
-		if action == "stake" {
-			args = append(args, input_amount)
-		} else if action == "unstake" {
-			args = nil
-		}
-	} else if protocol == "pancake" {
-		if action == "deposit" {
-			args = append(args, input_amount, input_duration)
-		} else if action == "withdraw" {
-			args = append(args, input_amount)
-		}
-	}
-	return args
 }

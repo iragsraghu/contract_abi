@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
+	"ContractMethodAPI/config"
 	"ContractMethodAPI/helpers"
 	"ContractMethodAPI/mapping"
 
@@ -71,8 +72,6 @@ func contractSourceCode(c *gin.Context) {
 		})
 		return
 	}
-	// get action name from user action
-	action_name, contract_address, rpcProviderURL, chain_name := helpers.GetMappingFields(chain, protocol, user_action, "contract_address", "rpcProviderURL")
 
 	// get lock duration from user
 	var input_duration float64
@@ -89,8 +88,12 @@ func contractSourceCode(c *gin.Context) {
 		input_duration = helpers.ConvertStringToFloat(lock_duration)
 		fmt.Println("input_duration", input_duration)
 	}
-
-	if contract_address == "" {
+	// loading yaml file into map
+	var protocols_data = config.LoadProtocol().Protocols.ProtocolsData
+	// putting required data into objectData variable
+	objectData := helpers.GetProtocolsData(protocols_data, protocol, chain, user_action)
+	objectData.WalletAddress = from_address // set from address to objectData
+	if objectData.ContractAddress == "" {
 		c.JSON(400, gin.H{
 			"error": "ABI file is not found",
 		})
@@ -98,14 +101,14 @@ func contractSourceCode(c *gin.Context) {
 	}
 
 	// get abi data from abi file name
-	abi_data, err := ioutil.ReadFile("ABI/" + contract_address + ".abi")
+	abi_data, err := ioutil.ReadFile("ABI/" + objectData.ContractAddress + ".abi")
 	if err != nil {
 		c.JSON(400, gin.H{
-			"error": contract_address + " Error reading abi file",
+			"error": objectData.ContractAddress + " Error reading abi file",
 		})
 		return
 	}
 
-	// get encode data from abi data
-	helpers.GetEncodeData(c, contract_address, string(abi_data), action_name, input_amount, input_duration, lock_duration_exists, rpcProviderURL, from_address, chain_name, protocol)
+	// get encode data
+	helpers.GetEncodeData(c, string(abi_data), input_amount, input_duration, objectData)
 }
