@@ -70,9 +70,10 @@ func GetEncodeData(c *gin.Context, abi_data string, inputData models.InputFields
 	}
 
 	c.JSON(200, gin.H{
-		"encoded_data": encodedString, // encoded data
-		"Data":         currProtocol,  // protocol data
-		"gas":          gasLimit,      // gas limit
+		"encoded_data": encodedString,                // encoded data
+		"from":         currProtocol.WalletAddress,   // from address
+		"to":           currProtocol.ContractAddress, // protocol data
+		"gas":          gasLimit,                     // gas limit
 		"value":        0,
 	})
 }
