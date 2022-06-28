@@ -27,10 +27,10 @@ func ConvertStringToFloat(input_data string) float64 {
 }
 
 // func GetEncodeData(c *gin.Context, contract_address string, abi_data string, action_name string, amount float64, input_duration float64, lock_duration_exists bool, rpcProviderURL string, from_address string, chain_name string, protocol string) {
-func GetEncodeData(c *gin.Context, abi_data string, amount float64, input_duration float64, objectData models.RequiredFields) {
+func GetEncodeData(c *gin.Context, abi_data string, inputData models.InputFields, currProtocol config.ProtocolData, currAction string) {
 
 	// connecting to the blockchain from the given rpc provider
-	web3, err := web3.NewWeb3(objectData.RPC)
+	web3, err := web3.NewWeb3(currProtocol.RPC)
 	if err != nil {
 		c.JSON(400, gin.H{
 			"error": "Error connecting to ethereum network",
@@ -38,25 +38,22 @@ func GetEncodeData(c *gin.Context, abi_data string, amount float64, input_durati
 		return
 	}
 	// creating contract object
-	contract, err := web3.Eth.NewContract(abi_data, objectData.ContractAddress)
+	contract, err := web3.Eth.NewContract(abi_data, currProtocol.ContractAddress)
 	if err != nil {
 		c.JSON(400, gin.H{
 			"error": "Error creating contract from web3",
 		})
 		return
 	}
-	bigIntAmount := web3.Utils.ToWei(float64(amount))                   // convert amount to wei with 18 decimals
-	bigIntDuration := web3.Utils.ToWei(float64(input_duration))         // convert duration to wei with 18 decimals
-	args := RequiredArguments(bigIntAmount, bigIntDuration, objectData) // check arguments for particular action
+	bigIntAmount := web3.Utils.ToWei(float64(inputData.Amount))                       // convert amount to wei with 18 decimals
+	bigIntDuration := web3.Utils.ToWei(float64(inputData.Duration))                   // convert duration to wei with 18 decimals
+	args := RequiredArguments(bigIntAmount, bigIntDuration, currProtocol, currAction) // check arguments for particular action
 
-	c.JSON(200, gin.H{
-		"arguments": args,
-	})
 	// encoding data for particular action
-	encoded_data, err := contract.EncodeABI(objectData.Action, args...)
+	encoded_data, err := contract.EncodeABI(currAction, args...)
 	if err != nil {
 		c.JSON(400, gin.H{
-			"error": "Error encoding ABI" + err.Error(),
+			"error": "Error encoding ABI " + err.Error(),
 			"data":  args,
 		})
 		return
@@ -64,7 +61,7 @@ func GetEncodeData(c *gin.Context, abi_data string, amount float64, input_durati
 
 	// converting byte encoded data to hex string
 	encodedString := "0x" + hex.EncodeToString(encoded_data)
-	gasLimit, err := calculateGasLimit(objectData, encodedString)
+	gasLimit, err := calculateGasLimit(currProtocol, encodedString)
 	if err != nil {
 		c.JSON(400, gin.H{
 			"error": "Error getting gas limit " + err.Error(),
@@ -74,39 +71,38 @@ func GetEncodeData(c *gin.Context, abi_data string, amount float64, input_durati
 
 	c.JSON(200, gin.H{
 		"encoded_data": encodedString, // encoded data
-		"Data":         objectData,    // protocol data
+		"Data":         currProtocol,  // protocol data
 		"gas":          gasLimit,      // gas limit
 		"value":        0,
 	})
 }
 
-var currentProtocolData config.ProtocolsData
-
-func GetProtocolsData(protocols_data []config.ProtocolsData, protocol string, chain string, user_action string) models.RequiredFields {
-	var objectData models.RequiredFields
-	for _, protocol_data := range protocols_data {
-		if protocol_data.ProtocolName == protocol && protocol_data.ChainName == chain {
-			objectData.ContractAddress, objectData.RPC, objectData.Protocol, objectData.Chain = protocol_data.ContractAddress, protocol_data.RPC, protocol_data.ProtocolName, protocol_data.ChainName
-			if user_action == "stake" {
-				objectData.Action = protocol_data.Stake.Action
-			} else if user_action == "unstake" {
-				objectData.Action = protocol_data.Unstake.Action
+func GetProtocolsData(protocol_data []config.ProtocolData, inputData models.InputFields) (config.ProtocolData, string) {
+	var currProtocol config.ProtocolData // current protocol data
+	var currAction string                // current action
+	for _, currData := range protocol_data {
+		if currData.ProtocolName == inputData.Protocol && currData.ChainName == inputData.Chain {
+			currData.WalletAddress = inputData.FromAddress
+			if inputData.Action == "stake" {
+				currAction = currData.Stake.Action
+			} else if inputData.Action == "unstake" {
+				currAction = currData.Unstake.Action
 			}
-			currentProtocolData = protocol_data
+			currProtocol = currData
 		}
 	}
-	return objectData
+	return currProtocol, currAction
 }
 
 // calculate gas limit
-func calculateGasLimit(objectData models.RequiredFields, encodedString string) (int, error) {
+func calculateGasLimit(currProtocol config.ProtocolData, encodedString string) (int, error) {
 	// creating transaction object clinet from given rpc provider
-	client := ethrpc.New(objectData.RPC)
+	client := ethrpc.New(currProtocol.RPC)
 	gas := int(2100000 * 5)
 	gasLimit, err := client.EthEstimateGas(ethrpc.T{
-		To:   objectData.ContractAddress,
+		To:   currProtocol.ContractAddress,
 		Data: encodedString,
-		From: objectData.WalletAddress,
+		From: currProtocol.WalletAddress,
 		Gas:  gas,
 	})
 	if err != nil {
@@ -117,16 +113,15 @@ func calculateGasLimit(objectData models.RequiredFields, encodedString string) (
 }
 
 // check arguments for particular action
-func RequiredArguments(input_amount *big.Int, input_duration *big.Int, obj models.RequiredFields) []interface{} {
+func RequiredArguments(input_amount *big.Int, input_duration *big.Int, currProtocol config.ProtocolData, currAction string) []interface{} {
 	var args []interface{}
-	currProto := currentProtocolData // assign current protocol data to a variable
-	if obj.Action == currProto.Stake.Action && currProto.Stake.AmountRequired == "true" && currProto.Stake.DurationRequired == "true" {
+	if currAction == currProtocol.Stake.Action && currProtocol.Stake.AmountRequired == "true" && currProtocol.Stake.DurationRequired == "true" {
 		args = append(args, input_amount, input_duration)
-	} else if obj.Action == currProto.Stake.Action && currProto.Stake.AmountRequired == "true" && currProto.Stake.DurationRequired == "false" {
+	} else if currAction == currProtocol.Stake.Action && currProtocol.Stake.AmountRequired == "true" && currProtocol.Stake.DurationRequired == "false" {
 		args = append(args, input_amount)
-	} else if obj.Action == currProto.Unstake.Action && currProto.Unstake.AmountRequired == "true" && currProto.Unstake.DurationRequired == "false" {
+	} else if currAction == currProtocol.Unstake.Action && currProtocol.Unstake.AmountRequired == "true" && currProtocol.Unstake.DurationRequired == "false" {
 		args = append(args, input_amount)
-	} else if obj.Action == currProto.Unstake.Action && currProto.Unstake.AmountRequired == "false" && currProto.Unstake.DurationRequired == "false" {
+	} else if currAction == currProtocol.Unstake.Action && currProtocol.Unstake.AmountRequired == "false" && currProtocol.Unstake.DurationRequired == "false" {
 		args = nil
 	}
 	return args

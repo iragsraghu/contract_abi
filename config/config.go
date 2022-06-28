@@ -12,10 +12,10 @@ type ProtocolConfig struct {
 }
 
 type Protocols struct {
-	ProtocolsData []ProtocolsData `yaml:"protocols_data"`
+	ProtocolData []ProtocolData `yaml:"protocols_data"`
 }
 
-type ProtocolsData struct {
+type ProtocolData struct {
 	ProtocolName    string        `yaml:"protocol_name"`
 	ChainName       string        `yaml:"chain_name"`
 	ContractAddress string        `yaml:"contractAddress"`

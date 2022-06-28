@@ -5,10 +5,10 @@ go 1.18
 require (
 	github.com/chenzhijie/go-web3 v0.0.0-20220608024854-c73f1994cab6
 	github.com/gin-gonic/gin v1.8.1
+	github.com/golang/protobuf v1.5.2
 	github.com/onrik/ethrpc v1.0.0
 	github.com/spf13/viper v1.12.0
 	golang.org/x/exp v0.0.0-20220608143224-64259d1afd70
-	gopkg.in/yaml.v3 v3.0.0
 )
 
 require (
@@ -50,4 +50,5 @@ require (
 	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/ini.v1 v1.66.4 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
+	gopkg.in/yaml.v3 v3.0.0 // indirect
 )
