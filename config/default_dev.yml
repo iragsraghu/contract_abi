@@ -16,7 +16,7 @@ protocols:
 
       - protocolName: "zeroswap"
         chainName: "binance"
-        contractAddress: "0x89eA093C07f4FCc03AEBe8A1D5507c15dE88531f"
+        contractAddress: "0x593497878c33dd1f32098E3F4aE217773F803cf3"
         walletAddress: ""
         rpc: "https://bsc-dataseed.binance.org/"
         stake:
