@@ -6,13 +6,9 @@ protocols:
         walletAddress: ""
         rpc: "https://cloudflare-eth.com"
         stake:
-          action: "stake"
-          amountRequired: "true"
-          durationRequired: "false"
+          requiredArray: ["stake","true","false"]
         unstake:
-          action: "unstake"
-          amountRequired: "false"
-          durationRequired: "false"
+          requiredArray: ["unstake","false","false"]
 
       - protocolName: "zeroswap"
         chainName: "binance"
@@ -20,13 +16,9 @@ protocols:
         walletAddress: ""
         rpc: "https://bsc-dataseed.binance.org/"
         stake:
-          action: "stake"
-          amountRequired: "true"
-          durationRequired: "false"
+          requiredArray: ["stake","true","false"]
         unstake:
-          action: "unstake"
-          amountRequired: "false"
-          durationRequired: "false"
+          requiredArray: ["unstake","false","false"]
 
       - protocolName: "zeroswap"
         chainName: "polygon"
@@ -34,13 +26,9 @@ protocols:
         walletAddress: ""
         rpc: "https://polygon-rpc.com"
         stake:
-          action: "stake"
-          amountRequired: "true"
-          durationRequired: "false"
+          requiredArray: ["stake","true","false"]
         unstake:
-          action: "unstake"
-          amountRequired: "false"
-          durationRequired: "false"
+          requiredArray: ["unstake","false","false"]
 
       - protocolName: "zeroswap"
         chainName: "avalanche"
@@ -48,13 +36,9 @@ protocols:
         walletAddress: ""
         rpc: "https://rpc.ankr.com/avalanche"
         stake:
-          action: "stake"
-          amountRequired: "true"
-          durationRequired: "false"
+          requiredArray: ["stake","true","false"]
         unstake:
-          action: "unstake"
-          amountRequired: "false"
-          durationRequired: "false"
+          requiredArray: ["unstake","false","false"]
 
       - protocolName: "opendao"
         chainName: "ethereum"
@@ -62,13 +46,9 @@ protocols:
         walletAddress: ""
         rpc: "https://eth-mainnet.public.blastapi.io"
         stake:
-          action: "enter"
-          amountRequired: "true"
-          durationRequired: "false"
+          requiredArray: ["enter","true","false"]
         unstake:
-          action: "leave"
-          amountRequired: "true"
-          durationRequired: "false"
+          requiredArray: ["leave","true","false"]
 
       - protocolName: "pancake"
         chainName: "binance"
@@ -76,13 +56,9 @@ protocols:
         walletAddress: ""
         rpc: "https://bsc-dataseed.binance.org/"
         stake:
-          action: "deposit"
-          amountRequired: "true"
-          durationRequired: "true"
+          requiredArray: ["deposit","true","true"]
         unstake:
-          action: "withdraw"
-          amountRequired: "true"
-          durationRequired: "false"
+          requiredArray: ["withdraw","true","false"]
       
       - protocolName: "apeswap"
         chainName: "binance"
@@ -90,11 +66,7 @@ protocols:
         walletAddress: ""
         rpc: "https://bsc-dataseed.binance.org/"
         stake:
-          action: "enterStaking"
-          amountRequired: "true"
-          durationRequired: "false"
+          requiredArray: ["enterStaking","true","false"]
         unstake:
-          action: "leaveStaking"
-          amountRequired: "true"
-          durationRequired: "false"
+          requiredArray: ["leaveStaking","true","false"]
         

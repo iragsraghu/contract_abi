@@ -1,10 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
+	"strings"
 
-	"ContractMethodAPI/config"
 	"ContractMethodAPI/helpers"
 	"ContractMethodAPI/inputs"
 
@@ -18,19 +17,19 @@ func indexPage(c *gin.Context) {
 }
 
 func contractSourceCode(c *gin.Context) {
+	// loading yaml file
+	// var protocol_data = config.LoadProtocol().Protocols.ProtocolData
+
 	// get input data from user request
-	inputData, err := inputs.GetInputData(c)
-	if err != nil {
+	inputData, currProtocol, requiredData, errors := inputs.GetInputData(c)
+	if errors != nil {
 		c.JSON(400, gin.H{
-			"error": "Error while getting input data : " + err.Error(),
+			"error": "Error while getting input data : " + strings.Join(errors, ", "),
 		})
 		return
 	}
 
-	// loading yaml file
-	var protocol_data = config.LoadProtocol().Protocols.ProtocolData
-	currProtocol, currAction := helpers.GetProtocolsData(protocol_data, inputData)
-	fmt.Println("curr Action: ", currAction)
+	// currProtocol, currAction := helpers.GetProtocolsData(protocol_data, inputData)
 	if currProtocol.ContractAddress == "" {
 		c.JSON(400, gin.H{
 			"error": "ABI file is not found",
@@ -48,5 +47,5 @@ func contractSourceCode(c *gin.Context) {
 	}
 
 	// get encode data
-	helpers.GetEncodeData(c, string(abi_data), inputData, currProtocol, currAction)
+	helpers.GetEncodeData(c, string(abi_data), inputData, currProtocol, requiredData)
 }

@@ -26,15 +26,11 @@ type ProtocolData struct {
 }
 
 type StakeConfig struct {
-	Action           string `yaml:"action"`
-	AmountRequired   string `yaml:"amount_required"`
-	DurationRequired string `yaml:"duration_required"`
+	RequiredArray [3]string `yaml:"required_array"`
 }
 
 type UnstakeConfig struct {
-	Action           string `yaml:"action"`
-	AmountRequired   string `yaml:"amount_required"`
-	DurationRequired string `yaml:"duration_required"`
+	RequiredArray [3]string `yaml:"required_array"`
 }
 
 func LoadProtocol() ProtocolConfig {

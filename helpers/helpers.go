@@ -27,7 +27,7 @@ func ConvertStringToFloat(input_data string) float64 {
 }
 
 // func GetEncodeData(c *gin.Context, contract_address string, abi_data string, action_name string, amount float64, input_duration float64, lock_duration_exists bool, rpcProviderURL string, from_address string, chain_name string, protocol string) {
-func GetEncodeData(c *gin.Context, abi_data string, inputData models.InputFields, currProtocol config.ProtocolData, currAction string) {
+func GetEncodeData(c *gin.Context, abi_data string, inputData models.InputFields, currProtocol config.ProtocolData, requiredData [3]string) {
 
 	// connecting to the blockchain from the given rpc provider
 	web3, err := web3.NewWeb3(currProtocol.RPC)
@@ -45,12 +45,13 @@ func GetEncodeData(c *gin.Context, abi_data string, inputData models.InputFields
 		})
 		return
 	}
-	bigIntAmount := web3.Utils.ToWei(float64(inputData.Amount))                       // convert amount to wei with 18 decimals
-	bigIntDuration := web3.Utils.ToWei(float64(inputData.Duration))                   // convert duration to wei with 18 decimals
-	args := RequiredArguments(bigIntAmount, bigIntDuration, currProtocol, currAction) // check arguments for particular action
+	bigIntAmount := web3.Utils.ToWei(float64(inputData.Amount))     // convert amount to wei with 18 decimals
+	bigIntDuration := web3.Utils.ToWei(float64(inputData.Duration)) // convert duration to wei with 18 decimals
+
+	args := EncodeArguments(bigIntAmount, bigIntDuration, requiredData) // check arguments for particular action
 
 	// encoding data for particular action
-	encoded_data, err := contract.EncodeABI(currAction, args...)
+	encoded_data, err := contract.EncodeABI(requiredData[0], args...)
 	if err != nil {
 		c.JSON(400, gin.H{
 			"error": "Error encoding ABI " + err.Error(),
@@ -78,21 +79,22 @@ func GetEncodeData(c *gin.Context, abi_data string, inputData models.InputFields
 	})
 }
 
-func GetProtocolsData(protocol_data []config.ProtocolData, inputData models.InputFields) (config.ProtocolData, string) {
+func GetProtocolData(protocol string, chain string, action string) (config.ProtocolData, [3]string) {
 	var currProtocol config.ProtocolData // current protocol data
-	var currAction string                // current action
-	for _, currData := range protocol_data {
-		if currData.ProtocolName == inputData.Protocol && currData.ChainName == inputData.Chain {
-			currData.WalletAddress = inputData.FromAddress
-			if inputData.Action == "stake" {
-				currAction = currData.Stake.Action
-			} else if inputData.Action == "unstake" {
-				currAction = currData.Unstake.Action
+	var reqData [3]string
+	// var currAction string // current action
+	for _, currData := range config.LoadProtocol().Protocols.ProtocolData {
+		if currData.ProtocolName == protocol && currData.ChainName == chain {
+			if action == "stake" {
+				reqData = currData.Stake.RequiredArray
+			} else if action == "unstake" {
+				reqData = currData.Unstake.RequiredArray
 			}
 			currProtocol = currData
 		}
+
 	}
-	return currProtocol, currAction
+	return currProtocol, reqData
 }
 
 // calculate gas limit
@@ -114,16 +116,14 @@ func calculateGasLimit(currProtocol config.ProtocolData, encodedString string) (
 }
 
 // check arguments for particular action
-func RequiredArguments(input_amount *big.Int, input_duration *big.Int, currProtocol config.ProtocolData, currAction string) []interface{} {
+func EncodeArguments(input_amount *big.Int, input_duration *big.Int, requiredData [3]string) []interface{} {
 	var args []interface{}
-	if currAction == currProtocol.Stake.Action && currProtocol.Stake.AmountRequired == "true" && currProtocol.Stake.DurationRequired == "true" {
+	if requiredData[2] == "true" {
 		args = append(args, input_amount, input_duration)
-	} else if currAction == currProtocol.Stake.Action && currProtocol.Stake.AmountRequired == "true" && currProtocol.Stake.DurationRequired == "false" {
-		args = append(args, input_amount)
-	} else if currAction == currProtocol.Unstake.Action && currProtocol.Unstake.AmountRequired == "true" && currProtocol.Unstake.DurationRequired == "false" {
-		args = append(args, input_amount)
-	} else if currAction == currProtocol.Unstake.Action && currProtocol.Unstake.AmountRequired == "false" && currProtocol.Unstake.DurationRequired == "false" {
+	} else if requiredData[1] == "false" {
 		args = nil
+	} else {
+		args = append(args, input_amount)
 	}
 	return args
 }
