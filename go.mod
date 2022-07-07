@@ -1,14 +1,13 @@
-module ContractMethodAPI
+module contract_abi
 
 go 1.18
 
 require (
-	github.com/chenzhijie/go-web3 v0.0.0-20220608024854-c73f1994cab6
+	github.com/chenzhijie/go-web3 v0.0.0-20220624054921-160d25d06af6
 	github.com/gin-gonic/gin v1.8.1
-	github.com/golang/protobuf v1.5.2
 	github.com/onrik/ethrpc v1.0.0
 	github.com/spf13/viper v1.12.0
-	golang.org/x/exp v0.0.0-20220608143224-64259d1afd70
+	golang.org/x/exp v0.0.0-20220706164943-b4a6d9510983
 )
 
 require (
@@ -45,7 +44,7 @@ require (
 	github.com/valyala/fasthttp v1.21.0 // indirect
 	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4 // indirect
 	golang.org/x/net v0.0.0-20220520000938-2e3eb7b945c2 // indirect
-	golang.org/x/sys v0.0.0-20220608164250-635b8c9b7f68 // indirect
+	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a // indirect
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/ini.v1 v1.66.4 // indirect

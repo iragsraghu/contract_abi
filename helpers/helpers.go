@@ -2,19 +2,18 @@ package helpers
 
 import (
 	"encoding/hex"
+	"fmt"
 	"math/big"
 	"strconv"
 
-	"ContractMethodAPI/config"
+	"contract_abi/config"
 
-	"ContractMethodAPI/models"
+	"contract_abi/models"
 
 	"github.com/chenzhijie/go-web3"
 	"github.com/gin-gonic/gin"
 	"github.com/onrik/ethrpc"
 )
-
-// const rpcProviderURL = "https://mainnet.infura.io/v3/7ba7186d11d24eddbf53996feb6dbabf"
 
 // get user amount from string
 func ConvertStringToFloat(input_data string) float64 {
@@ -33,7 +32,8 @@ func GetEncodeData(c *gin.Context, abi_data string, inputData models.InputFields
 	web3, err := web3.NewWeb3(currProtocol.RPC)
 	if err != nil {
 		c.JSON(400, gin.H{
-			"error": "Error connecting to ethereum network",
+			"status_code": 400,
+			"error":       "Error connecting to ethereum network",
 		})
 		return
 	}
@@ -41,11 +41,15 @@ func GetEncodeData(c *gin.Context, abi_data string, inputData models.InputFields
 	contract, err := web3.Eth.NewContract(abi_data, currProtocol.ContractAddress)
 	if err != nil {
 		c.JSON(400, gin.H{
-			"error": "Error creating contract from web3",
+			"status_code": 400,
+			"error":       "Error creating contract from web3",
 		})
 		return
 	}
-	bigIntAmount := web3.Utils.ToWei(float64(inputData.Amount))     // convert amount to wei with 18 decimals
+
+	// float to bigInt conversion
+	bigIntAmount := web3.Utils.ToWei(float64(inputData.Amount)) // convert amount to wei with 18 decimals
+	bigFloatAmount := web3.Utils.FromWei(bigIntAmount)
 	bigIntDuration := web3.Utils.ToWei(float64(inputData.Duration)) // convert duration to wei with 18 decimals
 
 	args := EncodeArguments(bigIntAmount, bigIntDuration, requiredData) // check arguments for particular action
@@ -54,35 +58,42 @@ func GetEncodeData(c *gin.Context, abi_data string, inputData models.InputFields
 	encoded_data, err := contract.EncodeABI(requiredData[0], args...)
 	if err != nil {
 		c.JSON(400, gin.H{
-			"error": "Error encoding ABI " + err.Error(),
-			"data":  args,
+			"status_code": 400,
+			"error":       "Error encoding ABI " + err.Error(),
 		})
 		return
 	}
 
 	// converting byte encoded data to hex string
 	encodedString := "0x" + hex.EncodeToString(encoded_data)
-	gasLimit, err := calculateGasLimit(currProtocol, encodedString)
+	gasLimit, err := calculateGasLimit(web3, currProtocol, encodedString, bigFloatAmount)
 	if err != nil {
 		c.JSON(400, gin.H{
-			"error": "Error getting gas limit " + err.Error(),
+			"status_code": 400,
+			"error":       err.Error(),
 		})
 		return
 	}
 
+	// creating output data for the response
+	result := models.OutputFields{
+		EndcodedData: encodedString,
+		From:         currProtocol.WalletAddress,
+		To:           currProtocol.ContractAddress,
+		Gas:          gasLimit,
+	}
 	c.JSON(200, gin.H{
-		"encoded_data": encodedString,                // encoded data
-		"from":         currProtocol.WalletAddress,   // from address
-		"to":           currProtocol.ContractAddress, // protocol data
-		"gas":          gasLimit,                     // gas limit
-		"value":        0,
+		"status_code": 200,
+		"data":        result, // contains encoded data, from address, to address, gas limit
 	})
 }
 
+// get matched protocol and required fields
 func GetProtocolData(protocol string, chain string, action string) (config.ProtocolData, [3]string) {
 	var currProtocol config.ProtocolData // current protocol data
-	var reqData [3]string
-	// var currAction string // current action
+	var reqData [3]string                // required data for particular action
+
+	// looping through protocols
 	for _, currData := range config.LoadProtocol().Protocols.ProtocolData {
 		if currData.ProtocolName == protocol && currData.ChainName == chain {
 			if action == "stake" {
@@ -98,10 +109,26 @@ func GetProtocolData(protocol string, chain string, action string) (config.Proto
 }
 
 // calculate gas limit
-func calculateGasLimit(currProtocol config.ProtocolData, encodedString string) (int, error) {
-	// creating transaction object clinet from given rpc provider
+func calculateGasLimit(web3 *web3.Web3, currProtocol config.ProtocolData, encodedString string, bigFloatAmount *big.Float) (int, error) {
 	client := ethrpc.New(currProtocol.RPC)
 	gas := int(2100000 * 5)
+
+	// getting balance of the wallet
+	balance, err := client.EthGetBalance(currProtocol.WalletAddress, "latest")
+	if err != nil {
+		return 0, fmt.Errorf("error getting balance of the wallet %v", err)
+	}
+
+	// convert to wei
+	bigIntBalance := new(big.Int).SetUint64(balance.Uint64())
+	bigFloatBalance := web3.Utils.FromWei(bigIntBalance)
+
+	// check if balance is sufficient
+	if bigFloatBalance.Cmp(bigFloatAmount) < 0 {
+		return 0, fmt.Errorf("insufficient balance")
+	}
+
+	// getting gas price
 	gasLimit, err := client.EthEstimateGas(ethrpc.T{
 		To:   currProtocol.ContractAddress,
 		Data: encodedString,

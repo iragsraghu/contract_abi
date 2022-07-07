@@ -53,26 +53,5 @@ func LoadProtocol() ProtocolConfig {
 		}
 		return protocolConfiguration
 	}
-	// env := os.Getenv("ENVIRONMENT")
-	// switch env {
-	// case "DEVELOPMENT":
-	// 	protocolName = "default_development"
-	// default:
-	// 	err := errors.New("invalid environment")
-	// 	log.Fatalf("Error in Setting Environment : %v", err)
-	// }
-
-	// //For deployment config
-	// viper.SetConfigName(protocolName)
-	// viper.AddConfigPath("./config")
-	// viper.SetConfigType("yml")
-	// err := viper.MergeInConfig()
-	// if err != nil {
-	// 	log.Fatalf(err.Error())
-	// }
-	// err = viper.Unmarshal(&protocolConfiguration)
-	// if err != nil {
-	// 	log.Fatalf("Unable to decode into struct, %v", err)
-	// }
 	return protocolConfiguration
 }

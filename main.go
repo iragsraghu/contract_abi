@@ -5,8 +5,15 @@ import (
 )
 
 func main() {
+	// create a gin router with default middleware:
 	router := gin.Default()
+
+	// add a route to the gin router for the root path
 	router.GET("/", indexPage)
+
+	// add a route to the gin router for the contract source code
 	router.POST("/api/v1/contract", contractSourceCode)
-	router.Run() // listen and serve on
+
+	// start the gin router
+	router.Run()
 }
